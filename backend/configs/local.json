@@ -11,6 +11,6 @@
     },
     "handler": {
       "requestTimeout": "20s",
-      "swaggerHost": "http://localhost:9804"
+      "swaggerHost": "http://51.250.32.229:9804"
     }
   }
