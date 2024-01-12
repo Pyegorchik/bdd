@@ -19,7 +19,7 @@ postgres.start:
 	-docker exec bdd-postgres psql -U postgres -c "create user bdd password '1337'"
 	-docker exec bdd-postgres psql -U postgres -c "create database bdd"
 	-docker exec bdd-postgres psql -U postgres -c "grant all privileges on database bdd to bdd"
-	-docker exec bdd-postgres psql -U postgres -c "create user public_bdd "
+	-docker exec bdd-postgres psql -U postgres -c "create user public_bdd password '1'"
 	-docker exec bdd-postgres psql -U postgres -c "GRANT CONNECT ON DATABASE bdd TO public_bdd;"
 	-docker exec bdd-postgres psql -U postgres -c "GRANT USAGE ON SCHEMA public TO public_bdd;"
 	-docker exec bdd-postgres psql -U postgres -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO public_bdd;"
