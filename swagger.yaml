@@ -1,0 +1,238 @@
+swagger: "2.0"
+info:
+  title: bdd
+  description: bdd
+  version: 1.0.0
+schemes:
+  - http
+  - https
+host: localhost:9902
+# basePath: /api
+produces:
+  - application/json
+consumes:
+  - application/json
+paths:
+  /rnd:
+    get:
+      tags:
+        - rnd
+      description: Получение рандомной строки для проверки работоспособности сервера
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: значение
+          schema:
+            type: string
+        default:
+          description: Ошибка
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /auth/message:
+    post:
+      tags:
+        - auth
+      description: Получение сообщения для авторизации по подписи
+      produces:
+        - application/json
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: auth_message_request
+          schema:
+            $ref: '#/definitions/AuthMessageRequest'
+      responses:
+        '200':
+          description: Сообщение для подписи кошельком
+          schema:
+            $ref: '#/definitions/AuthMessageResponse'
+        default:
+          description: Ошибка
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /auth/by_signature:
+    post:
+      tags:
+        - auth
+      description: Авторизация по подписи
+      produces:
+        - application/json
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: auth_by_signature
+          schema:
+            $ref: '#/definitions/AuthBySignatureRequest'
+      responses:
+        '200':
+          description: Результат авторизации
+          headers:
+            Set-Cookie:
+              type: string
+              description: Cookie with jwt. Format like this "access-token=1123aboba; refresh-token=322xdd"
+          schema:
+            $ref: '#/definitions/AuthResponse'
+        default:
+          description: Ошибка
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /auth/refresh:
+    post:
+      tags:
+        - auth
+      description: Рефреш токенов через refresh_token
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Результат успешного рефреша
+          headers:
+            Set-Cookie:
+              type: string
+              description: Cookie with jwt. Format like this "access-token=1123aboba; refresh-token=322xdd"
+          schema:
+            $ref: '#/definitions/AuthResponse'
+        default:
+          $ref: "#/responses/default"
+      security:
+        - cookieRefreshAuth: [ ]
+  /auth/logout:
+    post:
+      tags:
+        - auth
+      description: Закрытие текущей сессии пользователя (удаление одной пары jwt)
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Success response
+          schema:
+            $ref: "#/definitions/SuccessResponse"
+        default:
+          $ref: "#/responses/default"
+      security:
+        - cookieAuth: [ ]
+  /auth/full_logout:
+    post:
+      tags:
+        - auth
+      description: Закрытие всех действующих сессий пользователя (читать удаление всех jwt)
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Success response
+          schema:
+            $ref: "#/definitions/SuccessResponse"
+        default:
+          $ref: "#/responses/default"
+      security:
+        - cookieAuth: [ ]
+
+
+definitions:
+  AuthMessageRequest:
+    type: object
+    description: Запрос получения сообщения для авторизации по подписи
+    properties:
+      address:
+        type: string
+        pattern: '^0x[0-9a-fA-F]{40}$'
+        description: Адрес пользователя, который хочет авторизоваться
+    required:
+      - address
+  AuthBySignatureRequest:
+    type: object
+    description: Запрос авторизации по подписи
+    properties:
+      address:
+        type: string
+        pattern: '^0x[0-9a-fA-F]{40}$'
+        description: Адрес пользователя
+      signature:
+        type: string
+        description: Подпись
+    required:
+      - address
+      - signature
+  AuthResponse:
+    type: object
+    description: Обобщенный ответ на разные запросы авторизации
+    properties:
+      server_time:
+        description: текущее серверное время (timestamp в миллисекундах)
+        type: integer
+        format: int64
+      user:
+        description: Профиль авторизованного пользователя
+        $ref: '#/definitions/UserInfo'
+  AuthMessageResponse:
+    type: object
+    description: Ответ на запрос получения сообщения для авторизации по подписи
+    properties:
+      message:
+        type: string
+        description: Сообщение для подписи
+    required:
+      - message
+  SuccessResponse:
+    type: object
+    required: [success]
+    description: Типовой ответ на Post запросы, которые не должны возвращать никаких данных
+    properties:
+      success:
+        type: boolean
+  ErrorResponse:
+    type: object
+    description: Типовая ошибка
+    properties:
+      code:
+        type: integer
+        description: Код ошибки
+      message:
+        type: string
+        description: Сообщение ошибки
+      detail:
+        type: string
+        description: Дополнительные детали
+  UserInfo:
+    type: object
+    description: Юзер
+    properties:
+      address:
+        type: string
+        description: адрес регистрации
+        
+responses:
+  default:
+    description: Ошибка
+    schema:
+      $ref: "#/definitions/ErrorResponse"
+
+securityDefinitions:
+  cookieAuth:
+    type: apiKey
+    name: Cookie
+    in: header
+    description: cookie with JWT. Name 'access-token'
+  cookieRefreshAuth:
+    type: apiKey
+    name: Cookie
+    in: header
+    description: cookie with JWT. Name 'refresh-token'
+
+tags:
+  - name: auth
+  - name: campaigns
+
+parameters:
+  id:
+    description: Id
+    name: id
+    in: path
+    required: true
+    type: integer
+    format: int64

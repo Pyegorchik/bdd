@@ -1,0 +1,16 @@
+{
+    "service": {
+      "accessTTL": "30m",
+      "refreshTTL": "24h"
+    },
+    "server": {
+      "port": 10100,
+      "readTimeout": "30s",
+      "writeTimeout": "30s",
+      "maxHeaderBytes": 1024
+    },
+    "handler": {
+      "requestTimeout": "20s",
+      "swaggerHost": "https://bdd.customapp.tech"
+    }
+  }
