@@ -26,7 +26,7 @@ func (r *JWTokensRepo) InsertJWToken(
 	if !ok {
 		return errors.New("InsertJWToken: error: type assertion failed on interface Transaction")
 	}
-	if _, err := tx.Exec(ctx, `INSERT INTO jwtokens (id,purpose,role,number,expires_at,secret) VALUES($1, $2, $3, $4, $5,$6)`,
+	if _, err := tx.Exec(ctx, `INSERT INTO jwtokens_chain (id,purpose,role,number,expires_at,secret) VALUES($1, $2, $3, $4, $5,$6)`,
 		tokenData.ID, tokenData.Purpose, tokenData.Role,
 		tokenData.Number, tokenData.ExpiresAt, tokenData.Secret); err != nil {
 		return err
@@ -46,7 +46,7 @@ func (r *JWTokensRepo) GetJWTokenNumber(
 	if !ok {
 		return 0, errors.New("GetJWTokenNumber: error: type assertion failed on interface Transaction")
 	}
-	rows, err := tx.Query(ctx, `SELECT number FROM jwtokens WHERE id=$1 AND role=$2 AND purpose=$3 ORDER BY number`,
+	rows, err := tx.Query(ctx, `SELECT number FROM jwtokens_chain WHERE id=$1 AND role=$2 AND purpose=$3 ORDER BY number`,
 		id, role, int(purpose))
 
 	if err != nil {
@@ -90,7 +90,7 @@ func (r *JWTokensRepo) GetJWTokenSecret(
 	if !ok {
 		return "", errors.New("GetJWTokenSecret: error: type assertion failed on interface Transaction")
 	}
-	row := tx.QueryRow(ctx, `SELECT secret FROM jwtokens WHERE id=$1 AND role=$2 AND number=$3 AND purpose=$4`,
+	row := tx.QueryRow(ctx, `SELECT secret FROM jwtokens_chain WHERE id=$1 AND role=$2 AND number=$3 AND purpose=$4`,
 		id, role, number, purpose)
 
 	var secret string
@@ -116,7 +116,7 @@ func (r *JWTokensRepo) DropJWTokens(
 	if !ok {
 		return errors.New("DropJWTokens: error: type assertion failed on interface Transaction")
 	}
-	if _, err := tx.Exec(ctx, `DELETE FROM jwtokens WHERE id=$1 AND role=$2 AND number=$3`,
+	if _, err := tx.Exec(ctx, `DELETE FROM jwtokens_chain WHERE id=$1 AND role=$2 AND number=$3`,
 		id, role, number); err != nil {
 		return err
 	}
@@ -134,7 +134,7 @@ func (r *JWTokensRepo) DropAllJWTokens(
 	if !ok {
 		return errors.New("DropAllJWTokens: error: type assertion failed on interface Transaction")
 	}
-	if _, err := tx.Exec(ctx, `DELETE FROM jwtokens WHERE id=$1 and role=$2`,
+	if _, err := tx.Exec(ctx, `DELETE FROM jwtokens_chain WHERE id=$1 and role=$2`,
 		id, role); err != nil {
 		return err
 	}

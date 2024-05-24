@@ -11,8 +11,6 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-
-
 type UsersRepo struct {
 }
 
@@ -20,41 +18,35 @@ func NewUsersRepo() Users {
 	return &UsersRepo{}
 }
 
-
-func (r *UsersRepo) InsertUser(ctx context.Context, transaction Transaction, user *domain.User) (int64, error) {
+func (r *UsersRepo) InsertUser(ctx context.Context, transaction Transaction, user *domain.UserChain) (int64, error) {
 	tx, ok := transaction.(pgx.Tx)
 	if !ok {
-		return 0,errors.New("InsertUser: error: type assertion failed on interface Transaction")
+		return 0, errors.New("InsertUser: error: type assertion failed on interface Transaction")
 	}
-	row := tx.QueryRow(ctx, `INSERT INTO crawlers (id, address) VALUES (DEFAULT, $1) RETURNING id`,
-	strings.ToLower(user.Address.String()))
+	row := tx.QueryRow(ctx, `INSERT INTO users_chain (id, role, address) VALUES (DEFAULT, $1,$2)`,
+		user.Role, strings.ToLower(user.Address.String()))
 
 	var id int64
 	if err := row.Scan(&id); err != nil {
 		return 0, fmt.Errorf("InsertUser/Scan: %w", err)
 	}
 
-	if _, err := tx.Exec(ctx, `INSERT INTO users (id, role, address) VALUES (DEFAULT, $1,$2)`,
-	user.Role, strings.ToLower(user.Address.String()),); err != nil {
-	return 0, fmt.Errorf("InsertUser/Exec: %w", err)
-	}
-
-	return id ,nil
+	return id, nil
 }
 
 func (r *UsersRepo) GetUserById(ctx context.Context, transaction Transaction, id int64,
-	)  (*domain.User, error) {
+) (*domain.UserChain, error) {
 	tx, ok := transaction.(pgx.Tx)
 	if !ok {
 		return nil, errors.New("GetUserById: error: type assertion failed on interface Transaction")
 	}
 
 	row := tx.QueryRow(ctx, `SELECT u.id, u.role, u.address
-		FROM users AS u
+		FROM users_chain AS u
 		WHERE u.id=$1`, id)
 
 	var (
-		u    = &domain.User{}
+		u    = &domain.UserChain{}
 		addr string
 	)
 	err := row.Scan(&u.ID, &u.Role, &addr)
@@ -72,18 +64,18 @@ func (r *UsersRepo) GetUserByAddress(
 	ctx context.Context,
 	transaction Transaction,
 	address string,
-) (*domain.User, error) {
+) (*domain.UserChain, error) {
 	tx, ok := transaction.(pgx.Tx)
 	if !ok {
 		return nil, errors.New("GetUserByAddress: error: type assertion failed on interface Transaction")
 	}
 
 	row := tx.QueryRow(ctx, `SELECT u.id, u.role, u.address
-		FROM users AS u
+		FROM users_chain AS u
 		WHERE u.address=$1`, strings.ToLower(address))
 
 	var (
-		u    = &domain.User{}
+		u    = &domain.UserChain{}
 		addr string
 	)
 	err := row.Scan(&u.ID, &u.Role, &addr)
@@ -98,8 +90,6 @@ func (r *UsersRepo) GetUserByAddress(
 	return u, nil
 }
 
-
-
 func (r *UsersRepo) GetAuthMessageByAddress(
 	ctx context.Context,
 	transaction Transaction,
@@ -109,7 +99,7 @@ func (r *UsersRepo) GetAuthMessageByAddress(
 	if !ok {
 		return nil, errors.New("GetAuthMessageByAddress: error: type assertion failed on interface Transaction")
 	}
-	row := tx.QueryRow(ctx, `SELECT address, created_at, code FROM auth_messages WHERE address = $1`, strings.ToLower(address))
+	row := tx.QueryRow(ctx, `SELECT address, created_at, code FROM auth_messages_chain WHERE address = $1`, strings.ToLower(address))
 	res := &domain.AuthMessage{}
 	if err := row.Scan(&res.Address, &res.CreatedAt, &res.Message); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -120,7 +110,6 @@ func (r *UsersRepo) GetAuthMessageByAddress(
 	return res, nil
 }
 
-
 func (r *UsersRepo) InsertAuthMessage(
 	ctx context.Context,
 	transaction Transaction,
@@ -130,7 +119,7 @@ func (r *UsersRepo) InsertAuthMessage(
 	if !ok {
 		return errors.New("InsertAuthMessage: error: type assertion failed on interface Transaction")
 	}
-	if _, err := tx.Exec(ctx, `INSERT INTO auth_messages (address, code, created_at) VALUES ($1,$2,$3)`,
+	if _, err := tx.Exec(ctx, `INSERT INTO auth_messages_chain (address, code, created_at) VALUES ($1,$2,$3)`,
 		strings.ToLower(msg.Address), msg.Message, msg.CreatedAt); err != nil {
 		return fmt.Errorf("InsertAuthMessage/Exec: %w", err)
 	}
@@ -146,7 +135,7 @@ func (r *UsersRepo) DeleteAuthMessage(
 	if !ok {
 		return errors.New("DeleteAuthMessage: error: type assertion failed on interface Transaction")
 	}
-	if _, err := tx.Exec(ctx, `DELETE FROM auth_messages WHERE address=$1`, strings.ToLower(address)); err != nil {
+	if _, err := tx.Exec(ctx, `DELETE FROM auth_messages_chain WHERE address=$1`, strings.ToLower(address)); err != nil {
 		return fmt.Errorf("DeleteAuthMessage/Exec: %w", err)
 	}
 	return nil

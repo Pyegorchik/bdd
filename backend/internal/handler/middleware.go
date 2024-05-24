@@ -72,33 +72,32 @@ func (h *handler) CookieRefreshAuthMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-
 func (h *handler) rolePermissionMiddleware(role domain.Role, next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			userContext, ok := r.Context().Value(CtxKeyUser).(domain.UserWithTokenNumber)
-			if !ok {
-				if err := writeResponse(w,r, http.StatusBadRequest, models.ErrorResponse{
-					Code:    http.StatusBadRequest,
-					Message: fmt.Sprintf("Invalid User with role %w",role),
-				}); err != nil {
-					h.logging.Error( fmt.Errorf("write response: %w", err))
-				}
-
-				return
-			}
-
-			if role == userContext.Role {
-				ctx := context.WithValue(r.Context(), CtxKeyUser, userContext)
-				next.ServeHTTP(w, r.WithContext(ctx))
-
-				return
-			}
-			
-			if err := writeResponse(w,r, http.StatusForbidden, models.ErrorResponse{
-				Code:    http.StatusForbidden,
-				Message: "permissionDenied",
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userContext, ok := r.Context().Value(CtxKeyUser).(domain.UserWithTokenNumber)
+		if !ok {
+			if err := writeResponse(w, r, http.StatusBadRequest, models.ErrorResponse{
+				Code:    http.StatusBadRequest,
+				Message: fmt.Sprintf("Invalid UserChain with role %w", role),
 			}); err != nil {
 				h.logging.Error(fmt.Errorf("write response: %w", err))
 			}
-		})
-	}
+
+			return
+		}
+
+		if role == userContext.Role {
+			ctx := context.WithValue(r.Context(), CtxKeyUser, userContext)
+			next.ServeHTTP(w, r.WithContext(ctx))
+
+			return
+		}
+
+		if err := writeResponse(w, r, http.StatusForbidden, models.ErrorResponse{
+			Code:    http.StatusForbidden,
+			Message: "permissionDenied",
+		}); err != nil {
+			h.logging.Error(fmt.Errorf("write response: %w", err))
+		}
+	})
+}

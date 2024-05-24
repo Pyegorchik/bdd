@@ -14,7 +14,7 @@ import (
 )
 
 type Auth interface {
-	GetUserById(ctx context.Context, id int64) (*domain.User, error)
+	GetUserById(ctx context.Context, id int64) (*domain.UserChain, error)
 	GetUserByJWToken(ctx context.Context, purpose jwtoken.Purpose, token string) (*domain.UserWithTokenNumber, error)
 	RefreshJWTokens(ctx context.Context, id, number int64, role domain.Role) (*models.AuthResponse, *jwtoken.JWTokenData, *jwtoken.JWTokenData, error)
 	Logout(ctx context.Context, id, number int64, role domain.Role) error
@@ -22,7 +22,6 @@ type Auth interface {
 	GetAuthMessage(ctx context.Context, req *models.AuthMessageRequest) (*models.AuthMessageResponse, error)
 	AuthByMessage(ctx context.Context, req *models.AuthBySignatureRequest) (*models.AuthResponse, *jwtoken.JWTokenData, *jwtoken.JWTokenData, error)
 }
-
 
 type Service interface {
 	Auth
@@ -52,7 +51,7 @@ func NewService(
 	)
 
 	res := &service{
-		Auth:            Auth,
+		Auth: Auth,
 
 		cfg:     cfg,
 		logging: logging,

@@ -29,7 +29,7 @@ paths:
           description: Ошибка
           schema:
             $ref: '#/definitions/ErrorResponse'
-  /auth/message:
+  /b/auth/message:
     post:
       tags:
         - auth
@@ -52,7 +52,7 @@ paths:
           description: Ошибка
           schema:
             $ref: '#/definitions/ErrorResponse'
-  /auth/by_signature:
+  /b/auth/by_signature:
     post:
       tags:
         - auth
@@ -79,7 +79,7 @@ paths:
           description: Ошибка
           schema:
             $ref: '#/definitions/ErrorResponse'
-  /auth/refresh:
+  /b/auth/refresh:
     post:
       tags:
         - auth
@@ -99,7 +99,7 @@ paths:
           $ref: "#/responses/default"
       security:
         - cookieRefreshAuth: [ ]
-  /auth/logout:
+  /b/auth/logout:
     post:
       tags:
         - auth
@@ -115,7 +115,7 @@ paths:
           $ref: "#/responses/default"
       security:
         - cookieAuth: [ ]
-  /auth/full_logout:
+  /b/auth/full_logout:
     post:
       tags:
         - auth
@@ -127,6 +127,95 @@ paths:
           description: Success response
           schema:
             $ref: "#/definitions/SuccessResponse"
+        default:
+          $ref: "#/responses/default"
+      security:
+        - cookieAuth: [ ]
+  /p/auth/login:
+    post:
+      summary: "Авторизация пользователя"
+      description: "Позволяет пользователю авторизоваться для получения данных аккаунта."
+      parameters:
+        - in: body
+          name: credentials
+          description: "Данные для авторизации"
+          required: true
+          schema:
+            type: object
+            required:
+              - username
+              - password
+            properties:
+              username:
+                type: string
+              password:
+                type: string
+      responses:
+        200:
+          description: Результат авторизации
+          headers:
+            Set-Cookie:
+              type: string
+              description: Cookie with jwt. Format like this "access-token=1123aboba; refresh-token=322xdd"
+          schema:
+            $ref: '#/definitions/AuthResponse'
+        default:
+          description: Ошибка
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /p/messages:
+    post:
+      summary: "Отправка сообщения"
+      description: "Позволяет отправить сообщение определенному существующему другому пользователю, включая самого себя."
+      parameters:
+        - in: body
+          name: message
+          description: "Данные сообщения"
+          required: true
+          schema:
+            type: object
+            required:
+              - recipient_id
+              - content
+            properties:
+              recipient_id:
+                type: string
+              content:
+                type: string
+      responses:
+        200:
+          description: Success response
+          schema:
+            $ref: "#/definitions/SuccessResponse"
+        default:
+          $ref: "#/responses/default"
+      security:
+        - cookieAuth: [ ]
+  /p/dialogs/{dialog_id}/messages:
+    get:
+      summary: "Получение списка всех сообщений в одном диалоге"
+      description: "Возвращает список всех сообщений в указанном диалоге."
+      parameters:
+        - name: dialog_id
+          in: path
+          description: "ID диалога"
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Список сообщений"
+          schema:
+          # пагинация нужна, I guess
+            type: array
+            items:
+              type: object
+              properties:
+                message_id:
+                  type: string
+                sender_id:
+                  type: string
+                content:
+                  type: string
         default:
           $ref: "#/responses/default"
       security:

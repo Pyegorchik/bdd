@@ -61,7 +61,7 @@ const (
 func (s *AuthService) GetUserById(
 	ctx context.Context,
 	id int64,
-) (*domain.User, error) {
+) (*domain.UserChain, error) {
 	tx, err := s.repoTransactions.BeginTransaction(ctx)
 	if err != nil {
 		return nil, newServiceError(code500,
@@ -152,7 +152,6 @@ func (s *AuthService) RefreshJWTokens(
 	if err != nil {
 		return nil, nil, nil, newServiceError(code500, fmt.Errorf("GetUserAndRefreshTokens/getAuthRespWithUserById: %w", err), InternalError, "")
 	}
-
 
 	accessToken, refreshToken, err := s.generateJWTokensWithNumber(ctx, tx, id, role, int(number))
 	if err != nil {
@@ -302,18 +301,20 @@ func (s *AuthService) AuthByMessage(
 	}
 
 	user, err := s.repoUsers.GetUserByAddress(ctx, tx, strings.ToLower(*req.Address))
-		if err != nil {
-			if errors.Is(err, repository.ErrNoRows) {
-				user, err = createUser(ctx, tx, s.repoUsers, strings.ToLower(*req.Address), 0)
-				if err != nil {
-					return nil, nil, nil, newServiceError(code400,
-					fmt.Errorf("AuthByMessage/createUser: %w", err), InternalError, "")
-			}} else {			
+	if err != nil {
+		if errors.Is(err, repository.ErrNoRows) {
+			user, err = createUser(ctx, tx, s.repoUsers, strings.ToLower(*req.Address), 0)
+			if err != nil {
 				return nil, nil, nil, newServiceError(code400,
-				fmt.Errorf("AuthByMessage/GetUserByAddress: %w", err), InternalError, "")}
-
+					fmt.Errorf("AuthByMessage/createUser: %w", err), InternalError, "")
+			}
+		} else {
+			return nil, nil, nil, newServiceError(code400,
+				fmt.Errorf("AuthByMessage/GetUserByAddress: %w", err), InternalError, "")
 		}
-		
+
+	}
+
 	resp, err := s.getAuthRespWithUserById(ctx, tx, user.Role, user.ID)
 	if err != nil {
 		return nil, nil, nil, newServiceError(code500, fmt.Errorf("AuthByMessage/getAuthRespWithUserById: %w", err), InternalError, "")
@@ -328,10 +329,9 @@ func (s *AuthService) AuthByMessage(
 	if err := tx.Commit(ctx); err != nil {
 		return nil, nil, nil, newServiceError(code500,
 			fmt.Errorf("AuthByMessage/Commit: %w", err), InternalError, "")
-		}
+	}
 	return resp, accessToken, refreshToken, nil
 }
-
 
 func createUser(
 	ctx context.Context,
@@ -339,9 +339,9 @@ func createUser(
 	repoUsers repository.Users,
 	address string,
 	d_id int64,
-) (*domain.User, error) {
-	u := &domain.User{
-		Address:              common.HexToAddress(address),
+) (*domain.UserChain, error) {
+	u := &domain.UserChain{
+		Address: common.HexToAddress(address),
 	}
 	var err error
 	u.ID, err = repoUsers.InsertUser(ctx, tx, u)
@@ -352,30 +352,14 @@ func createUser(
 	return u, nil
 }
 
-
 func (s *AuthService) getAuthRespWithUserById(ctx context.Context, tx repository.Transaction, role domain.Role, id int64) (*models.AuthResponse, error) {
 	var resp models.AuthResponse
 
-	user, err := s.repoUsers.GetUserById(ctx,tx,id)
+	user, err := s.repoUsers.GetUserById(ctx, tx, id)
 	if err != nil {
 
 	}
 	resp.User = domain.UserToModel(user)
-	// switch role {
-		
-	// case domain.User:
-	// 	admin, err := s.repoUsers.GetAdminById(ctx, tx, id)
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("getAuthRespWithUserById/GetAdminById: %w", err)
-	// 	}
-	// 	resp.Admin = domain.AdminToModel(admin)
-	// case domain.RoleCrawler:
-	// 	crawler, err := s.repoUsers.GetCrawlerById(ctx, tx, id)
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("getAuthRespWithUserById/GetCrawlerById: %w", err)
-	// 	}
-	// 	resp.Crawler = domain.CrawlerToModel(crawler)
-	// }
 
 	return &resp, nil
 }
@@ -390,7 +374,6 @@ func (s *AuthService) generateJWTokens(
 	if err != nil {
 		return nil, nil, fmt.Errorf("generateJWTokens/GetJWTokenNumber: %w", err)
 	}
-
 
 	return s.generateJWTokensWithNumber(ctx, tx, id, role, number)
 }
