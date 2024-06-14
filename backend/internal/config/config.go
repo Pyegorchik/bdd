@@ -40,7 +40,8 @@ type (
 	ServiceConfig struct {
 		AccessTokenTTL  time.Duration
 		RefreshTokenTTL time.Duration
-		StaticPath string
+		StaticPath      string
+		Mode            string
 	}
 
 	TokenManagerConfig struct {
@@ -85,7 +86,8 @@ func Init(configPath string) (*Config, error) {
 		Service: &ServiceConfig{
 			AccessTokenTTL:  jsonCfg.GetDuration("service.accessTTL"),
 			RefreshTokenTTL: jsonCfg.GetDuration("service.refreshTTL"),
-			StaticPath: jsonCfg.GetString("service.staticPath"),
+			StaticPath:      jsonCfg.GetString("service.staticPath"),
+			Mode:            jsonCfg.GetString("mode"),
 		},
 		TokenManager: &TokenManagerConfig{
 			SigningKey: envCfg.GetString("JWT_SIGNING_KEY"),

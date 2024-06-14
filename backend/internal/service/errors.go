@@ -11,33 +11,30 @@ const (
 
 	InternalError       = "internal error"
 	UserNotExist        = "user doesn't exist"
-	AdminNotExist        = "admin doesn't exist"
-	RoleNotExist 		= "a role doesn't exist"
+	AdminNotExist       = "admin doesn't exist"
+	RoleNotExist        = "a role doesn't exist"
 	AuthMessageNotExist = "auth message doesn't exist"
 	ParseTokenFailed    = "parse token failed"
 
-	TokenWrongSecret    = "wrong token secret"
-	AuthMessageExpired  = "auth message expired"
-	WrongSignature      = "wrong signature"
-	EcrecoverFailed     = "ecrecover failed"
-	CreateUserFailed    = "create user failed"
-	UserWithEmailExists = "user with email exists"
-	IncorrectPassword   = "incorrect password"
-	InvalidAccessParam  = "invalid access parametr"
-	UserIsBlocked       = "user is blocked"
-	NoEthTxLogs         = "no transaction logs"
-	LoginExist          = "login exist"
+	TokenWrongSecret   = "wrong token secret"
+	AuthMessageExpired = "auth message expired"
+	WrongSignature     = "wrong signature"
+	EcrecoverFailed    = "ecrecover failed"
+	CreateUserFailed   = "create user failed"
+	InvalidBody        = "invalid body data"
+	BadRequest         = "Bad Request"
+	InvalidQuery       = "invalid query data"
 )
 
 // error struct
 type ServiceError struct {
-	// Сама ошибка
+	// The error itself
 	Err error `json:"-"`
-	// Код ошибки
+	// Error's code
 	Code int64 `json:"code,omitempty"`
-	// Дополнительные детали
+	// Additional details
 	Detail string `json:"detail,omitempty"`
-	// Сообщение ошибки
+	// Error's message
 	Msg string `json:"message,omitempty"`
 }
 

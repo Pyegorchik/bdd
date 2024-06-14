@@ -23,7 +23,7 @@ func (r *UsersRepo) InsertUser(ctx context.Context, transaction Transaction, use
 	if !ok {
 		return 0, errors.New("InsertUser: error: type assertion failed on interface Transaction")
 	}
-	row := tx.QueryRow(ctx, `INSERT INTO users_chain (id, role, address) VALUES (DEFAULT, $1,$2)`,
+	row := tx.QueryRow(ctx, `INSERT INTO users_chain (id, role, address) VALUES (DEFAULT, $1,$2) RETURNING id`,
 		user.Role, strings.ToLower(user.Address.String()))
 
 	var id int64

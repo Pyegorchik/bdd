@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/Pyegorchik/bdd/backend/internal/config"
+	"github.com/Pyegorchik/bdd/backend/internal/domain"
 	"github.com/Pyegorchik/bdd/backend/internal/service"
 	"github.com/Pyegorchik/bdd/backend/pkg/logger"
 	"github.com/go-openapi/strfmt"
@@ -13,6 +15,8 @@ import (
 type Handler interface {
 	Init() http.Handler
 }
+
+type HandlerFuncWithUser func(http.ResponseWriter, *domain.UserWithTokenNumber, *http.Request)
 
 type handler struct {
 	cfg               *config.HandlerConfig
@@ -49,15 +53,20 @@ func (h *handler) corsMiddleware(next http.Handler) http.Handler {
 func (h *handler) Init() http.Handler {
 	router := mux.NewRouter()
 
-	authRouter := router.PathPrefix("/auth").Subrouter()
-	authRouter.Handle("/refresh", h.CookieRefreshAuthMiddleware((http.HandlerFunc(h.RefreshAuth))))
-	authRouter.Handle("/logout", h.CookieAuthMiddleware((http.HandlerFunc(h.Logout))))
-	authRouter.Handle("/full_logout", h.CookieAuthMiddleware((http.HandlerFunc(h.FullLogout))))
+	authRouter := router.PathPrefix("/g1/auth").Subrouter()
+	authRouter.Handle("/refresh", h.CookieRefreshAuthMiddleware((HandlerFuncWithUser(h.RefreshAuth))))
+	authRouter.Handle("/logout", h.CookieAuthMiddleware((HandlerFuncWithUser(h.Logout))))
+	authRouter.Handle("/full_logout", h.CookieAuthMiddleware((HandlerFuncWithUser(h.FullLogout))))
 	authRouter.HandleFunc("/message", h.AuthMessage)
 	authRouter.HandleFunc("/by_signature", h.AuthByMessage)
 
 	rndRouter := router.PathPrefix("/rnd").Subrouter()
 	rndRouter.HandleFunc("", h.Rnd)
+
+	dialogsRounter := router.PathPrefix("/g1/dialogs").Subrouter()
+	dialogsRounter.Handle("", h.CookieAuthMiddleware((HandlerFuncWithUser(h.GetDialogs))))
+	dialogsRounter.Handle("/message", h.CookieAuthMiddleware((HandlerFuncWithUser(h.SendMessage))))
+	dialogsRounter.Handle(fmt.Sprintf("/%s/messages", handlerIDPattern), h.CookieAuthMiddleware((HandlerFuncWithUser(h.GetMessages))))
 
 	router.Use(h.corsMiddleware)
 	return router

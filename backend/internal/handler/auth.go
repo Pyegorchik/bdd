@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"time"
 
@@ -11,13 +10,7 @@ import (
 	"github.com/Pyegorchik/bdd/backend/models"
 )
 
-func (h *handler) Logout(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value(CtxKeyUser).(*domain.UserWithTokenNumber)
-	if !ok {
-		h.makeErrorResponse(w, r, UserMissingInCtxErr, code500)
-		return
-	}
-
+func (h *handler) Logout(w http.ResponseWriter, user *domain.UserWithTokenNumber, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.cfg.RequestTimeout)
 	defer cancel()
 
@@ -52,13 +45,7 @@ func (h *handler) Logout(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *handler) FullLogout(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value(CtxKeyUser).(*domain.UserWithTokenNumber)
-	if !ok {
-		h.makeErrorResponse(w, r, UserMissingInCtxErr, code500)
-		return
-	}
-
+func (h *handler) FullLogout(w http.ResponseWriter, user *domain.UserWithTokenNumber, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.cfg.RequestTimeout)
 	defer cancel()
 
@@ -82,7 +69,7 @@ func (h *handler) FullLogout(w http.ResponseWriter, r *http.Request) {
 		Secure:   true,
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
-		Path:     "/auth/refresh",
+		Path:     "",
 		MaxAge:   -1,
 	}
 	http.SetCookie(w, refreshCookie)
@@ -145,7 +132,7 @@ func (h *handler) AuthByMessage(w http.ResponseWriter, r *http.Request) {
 		Secure:   true,
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
-		Path:     "",
+		Path:     "/api",
 		MaxAge:   -int(time.Since(accessToken.ExpiresAt).Seconds()),
 	}
 	http.SetCookie(w, cookie)
@@ -155,7 +142,7 @@ func (h *handler) AuthByMessage(w http.ResponseWriter, r *http.Request) {
 		Secure:   true,
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
-		Path:     "/auth/refresh",
+		Path:     "/api/auth/refresh",
 		MaxAge:   -int(time.Since(refreshToken.ExpiresAt).Seconds()),
 	}
 	http.SetCookie(w, refreshCookie)
@@ -165,17 +152,10 @@ func (h *handler) AuthByMessage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
-func (h *handler) RefreshAuth(w http.ResponseWriter, r *http.Request) {
+func (h *handler) RefreshAuth(w http.ResponseWriter, user *domain.UserWithTokenNumber, r *http.Request) {
 
 	ctx, cancel := context.WithTimeout(r.Context(), h.cfg.RequestTimeout)
 	defer cancel()
-
-	user, ok := ctx.Value(CtxKeyUser).(*domain.UserWithTokenNumber)
-	if !ok {
-		h.makeErrorResponse(w, r, errors.New("RefreshAuth"), code500)
-		return
-	}
 
 	res, accessToken, refreshToken, err := h.service.RefreshJWTokens(ctx, user.ID, int64(user.Number), user.Role)
 	if err != nil {
@@ -188,7 +168,7 @@ func (h *handler) RefreshAuth(w http.ResponseWriter, r *http.Request) {
 		Secure:   true,
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
-		Path:     "",
+		Path:     "/api",
 		MaxAge:   -int(time.Since(accessToken.ExpiresAt).Seconds()),
 	}
 	http.SetCookie(w, cookie)
@@ -198,7 +178,7 @@ func (h *handler) RefreshAuth(w http.ResponseWriter, r *http.Request) {
 		Secure:   true,
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
-		Path:    "/auth/refresh",
+		Path:     "/api/auth/refresh",
 		MaxAge:   -int(time.Since(refreshToken.ExpiresAt).Seconds()),
 	}
 	http.SetCookie(w, refreshCookie)

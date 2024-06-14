@@ -1,5 +1,6 @@
 {
     "service": {
+      "mode": "dev",
       "accessTTL": "30m",
       "refreshTTL": "24h"
     },
@@ -11,6 +12,6 @@
     },
     "handler": {
       "requestTimeout": "20s",
-      "swaggerHost": "https://bdd.customapp.tech"
+      "swaggerHost": ""
     }
   }

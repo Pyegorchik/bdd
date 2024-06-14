@@ -30,6 +30,18 @@ type JWTokens interface {
 	DropAllJWTokens(ctx context.Context, transaction Transaction, id int64, role domain.Role) error
 }
 
+type Dialogs interface {
+	DialogExists(ctx context.Context, transaction Transaction, userOneID int64, userTwoID int64) (bool, error)
+	GetDialogByUsers(ctx context.Context, transaction Transaction, userOneID int64, userTwoID int64) (int64, error)
+	CreateDialogBetweenUsers(ctx context.Context, transaction Transaction, userOneID int64, userTwoID int64, dialodID int64) error
+	CreateMessageInDialog(ctx context.Context, transaction Transaction, msg *domain.Message) error
+	CreateDialog(ctx context.Context, transaction Transaction, userOneID int64, userTwoID int64) (int64, error)
+
+	GetAllDialogsByUser(ctx context.Context, transaction Transaction, userID int64) ([]*domain.DialogParticipant, error)
+
+	GetAllMessagesWithinDialogById(ctx context.Context, transaction Transaction, dialogID int64) ([]*domain.Message, error)
+}
+
 type Transaction interface {
 	Commit(ctx context.Context) error
 	Rollback(ctx context.Context) error
@@ -41,6 +53,7 @@ type Transactions interface {
 type Repository struct {
 	Users
 	JWTokens
+	Dialogs
 
 	Transactions
 }
@@ -48,6 +61,7 @@ type Repository struct {
 func NewRepository(cfg *config.Config, pool *pgxpool.Pool) (*Repository, error) {
 	return &Repository{
 		Users:        NewUsersRepo(),
+		Dialogs:      NewDialogsRepo(),
 		JWTokens:     NewJWTokensRepo(),
 		Transactions: NewTransactionsRepo(pool),
 	}, nil

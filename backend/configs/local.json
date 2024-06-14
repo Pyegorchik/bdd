@@ -1,5 +1,6 @@
 {
     "service": {
+      "mode": "local",
       "accessTTL": "30m",
       "refreshTTL": "24h"
     },
@@ -11,6 +12,6 @@
     },
     "handler": {
       "requestTimeout": "20s",
-      "swaggerHost": "http://51.250.32.229:9804"
+      "swaggerHost": ""
     }
   }

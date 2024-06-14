@@ -3,7 +3,6 @@ include .env
 run:
 	go run cmd/app/main.go -cfg configs/local
 
-
 build-models:
 	docker run --rm --user $(shell id -u):$(shell id -g) -e GOPATH=$(go env GOPATH):/go -v ${HOME}:${HOME} -w $(shell pwd) quay.io/goswagger/swagger generate model --spec=../swagger.yaml
 	go mod tidy
@@ -44,3 +43,10 @@ migrate.down:
 
 migrate.status:
 	goose -dir migrations postgres "host=localhost port=1339 user=bdd password=1337 dbname=bdd sslmode=disable" status
+
+tests:
+	go test -v ./integrational_tests/... 
+
+# To use one check one test like `make tt test=TestSuiteRun/TestTagsList`
+tt:
+	go test -v ./integrational_tests/... -run $$test

@@ -33,15 +33,16 @@ type Dialog struct {
 }
 
 type DialogParticipant struct {
-	DialogID int64
-	UserID   int64
+	DialogID   int64
+	UserAdress string
 }
 
 type Message struct {
-	ID       int64
-	DialogID int64
-	SenderID int64
-	Content  string
+	ID            int64
+	DialogID      int64
+	SenderAddress string
+	SenderID      int64
+	Content       string
 }
 
 type User struct {
@@ -54,4 +55,29 @@ func UserToModel(u *UserChain) *models.UserInfo {
 	return &models.UserInfo{
 		Address: u.Address.String(),
 	}
+}
+
+func RecepientsToRecepinetsResponce(rc []*DialogParticipant) []*models.DialogsResponseItems0 {
+	var res []*models.DialogsResponseItems0
+	for _, v := range rc {
+		res = append(res, &models.DialogsResponseItems0{
+			RecepeintAddress: v.UserAdress,
+			DialogID:         v.DialogID,
+		})
+	}
+
+	return res
+}
+
+func MessageToMessageResponse(msgs []*Message) []*models.MessagesResponseItems0 {
+	var res []*models.MessagesResponseItems0
+	for _, v := range msgs {
+		res = append(res, &models.MessagesResponseItems0{
+			SenderAddress: v.SenderAddress,
+			Content:       v.Content,
+			MessageID:     v.ID,
+		})
+	}
+
+	return res
 }

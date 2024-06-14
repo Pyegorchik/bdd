@@ -29,7 +29,7 @@ paths:
           description: Ошибка
           schema:
             $ref: '#/definitions/ErrorResponse'
-  /b/auth/message:
+  /g1/auth/message:
     post:
       tags:
         - auth
@@ -52,7 +52,7 @@ paths:
           description: Ошибка
           schema:
             $ref: '#/definitions/ErrorResponse'
-  /b/auth/by_signature:
+  /g1/auth/by_signature:
     post:
       tags:
         - auth
@@ -79,7 +79,7 @@ paths:
           description: Ошибка
           schema:
             $ref: '#/definitions/ErrorResponse'
-  /b/auth/refresh:
+  /g1/auth/refresh:
     post:
       tags:
         - auth
@@ -99,7 +99,7 @@ paths:
           $ref: "#/responses/default"
       security:
         - cookieRefreshAuth: [ ]
-  /b/auth/logout:
+  /g1/auth/logout:
     post:
       tags:
         - auth
@@ -115,7 +115,7 @@ paths:
           $ref: "#/responses/default"
       security:
         - cookieAuth: [ ]
-  /b/auth/full_logout:
+  /g1/auth/full_logout:
     post:
       tags:
         - auth
@@ -131,57 +131,18 @@ paths:
           $ref: "#/responses/default"
       security:
         - cookieAuth: [ ]
-  /p/auth/login:
+  /g1/dialogs/message:
     post:
-      summary: "Авторизация пользователя"
-      description: "Позволяет пользователю авторизоваться для получения данных аккаунта."
-      parameters:
-        - in: body
-          name: credentials
-          description: "Данные для авторизации"
-          required: true
-          schema:
-            type: object
-            required:
-              - username
-              - password
-            properties:
-              username:
-                type: string
-              password:
-                type: string
-      responses:
-        200:
-          description: Результат авторизации
-          headers:
-            Set-Cookie:
-              type: string
-              description: Cookie with jwt. Format like this "access-token=1123aboba; refresh-token=322xdd"
-          schema:
-            $ref: '#/definitions/AuthResponse'
-        default:
-          description: Ошибка
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-  /p/messages:
-    post:
-      summary: "Отправка сообщения"
-      description: "Позволяет отправить сообщение определенному существующему другому пользователю, включая самого себя."
+      tags:
+        - messages
+      description: "Позволяет отправить сообщение определенному другому пользователю"
       parameters:
         - in: body
           name: message
           description: "Данные сообщения"
           required: true
           schema:
-            type: object
-            required:
-              - recipient_id
-              - content
-            properties:
-              recipient_id:
-                type: string
-              content:
-                type: string
+            $ref: "#/definitions/SendMessageRequest"
       responses:
         200:
           description: Success response
@@ -191,31 +152,33 @@ paths:
           $ref: "#/responses/default"
       security:
         - cookieAuth: [ ]
-  /p/dialogs/{dialog_id}/messages:
+  /g1/dialogs:
     get:
-      summary: "Получение списка всех сообщений в одном диалоге"
+      tags:
+          - dialogs
+      description: "Возвращает список всех диалогов"
+      responses:
+          200:
+            description: "Список сообщений"
+            schema:
+            # пагинация нужна, I guess
+              $ref: "#/definitions/DialogsResponse"
+          default:
+            $ref: "#/responses/default"
+      security:
+        - cookieAuth: [ ]
+  /g1/dialogs/{id}/messages:
+    get:
+      tags:
+        - messages
       description: "Возвращает список всех сообщений в указанном диалоге."
       parameters:
-        - name: dialog_id
-          in: path
-          description: "ID диалога"
-          required: true
-          type: string
+        - $ref: "#/parameters/id"
       responses:
         200:
           description: "Список сообщений"
           schema:
-          # пагинация нужна, I guess
-            type: array
-            items:
-              type: object
-              properties:
-                message_id:
-                  type: string
-                sender_id:
-                  type: string
-                content:
-                  type: string
+            $ref: "#/definitions/MessagesResponse"
         default:
           $ref: "#/responses/default"
       security:
@@ -294,6 +257,40 @@ definitions:
       address:
         type: string
         description: адрес регистрации
+  SendMessageRequest:
+    type: object
+    required:
+      - recipient_id
+      - content
+    properties:
+      recipient_id:
+        type: string
+      content:
+        type: string
+  DialogsResponse:
+    type: array
+    items:
+      # пагинация нужна, I guess
+      type: object
+      properties:
+        recepeint_address:
+          type: string
+        dialog_id:
+          type: integer
+          format: int64
+  MessagesResponse:
+    type: array
+    items:
+      type: object
+      properties:
+        message_id:
+            type: integer
+            format: int64
+        sender_address:
+          type: string
+        content:
+          type: string
+
         
 responses:
   default:
