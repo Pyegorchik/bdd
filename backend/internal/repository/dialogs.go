@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/Pyegorchik/bdd/backend/internal/domain"
 	"github.com/jackc/pgx/v5"
@@ -103,7 +102,6 @@ func (repo *DialogsRepo) CreateMessageInDialog(ctx context.Context, transaction 
 		return errors.New("CreateMessageInDialog: error: type assertion failed on interface Transaction")
 	}
 
-	log.Printf("d  %v s %v c %v", msg.DialogID, msg.SenderID, msg.Content)
 	query := `INSERT INTO messages (dialog_id, sender_id, content) VALUES ($1, $2, $3)`
 	_, err := tx.Exec(ctx, query, msg.DialogID, msg.SenderID, msg.Content)
 	if err != nil {

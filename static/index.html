@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.3.0/dist/web3.min.js"></script>
+</head>
+<body>
+    <h1>Chat App with MetaMask Integration</h1>
+    <button onclick="loginWithMetaMask()">Login with MetaMask</button>
+    <button onclick="sendMessage()">Send Message</button>
+    <button onclick="getDialogs()">Get All Dialogs</button>
+    <button onclick="getMessages()">Get Messages in Dialog</button>
+
+    <div id="output"></div>
+
+    <script>
+        let web3;
+        let userAddress;
+
+        async function loginWithMetaMask() {
+            if (typeof window.ethereum !== 'undefined') {
+                web3 = new Web3(window.ethereum);
+                try {
+                    await window.ethereum.enable();
+                    const accounts = await web3.eth.getAccounts();
+                    userAddress = accounts[0];
+                    const authMessage = await fetch('http://localhost:9902/g1/auth/message', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ address: userAddress })
+                    }).then(response => response.json());
+
+                    const signature = await web3.eth.personal.sign(authMessage.message, userAddress);
+                    const authResponse = await fetch('http://localhost:9902/g1/auth/by_signature', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ address: userAddress, signature: signature })
+                    }).then(response => {
+                        // Extract the JWT token from the Set-Cookie header
+                        const token = response.headers.get('access-token');
+                        if (token) {
+                            // Assuming the access token is named 'access-token' in the cookie
+                            const jwtToken = token.match(/access-token=([^;]+)/)[1];
+                            localStorage.setItem('jwtToken', jwtToken);
+                            document.getElementById('output').innerText = 'Logged in successfully!';
+                        }
+                        return response.json();
+                    });
+
+                } catch (error) {
+                    console.error(error);
+                }
+            } else {
+                alert('MetaMask is not installed!');
+            }
+        }
+
+        async function sendMessage() {
+            const jwtToken = localStorage.getItem('jwtToken');
+            const recipientId = prompt('Enter recipient ID:');
+            const content = prompt('Enter message content:');
+            const response = await fetch('http://localhost:9902/g1/message/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Cookie': `Bearer ${jwtToken}`
+                },
+                body: JSON.stringify({ recipient_id: recipientId, content: content })
+            }).then(response => response.json());
+
+            document.getElementById('output').innerText = JSON.stringify(response, null, 2);
+        }
+
+        async function getDialogs() {
+            const jwtToken = localStorage.getItem('jwtToken');
+            const response = await fetch('http://localhost:9902/g1/dialogs', {
+                method: 'GET',
+                headers: {
+                    'Cookie': `Bearer ${jwtToken}`
+                }
+            }).then(response => response.json());
+
+            document.getElementById('output').innerText = JSON.stringify(response, null, 2);
+        }
+
+        async function getMessages() {
+            const jwtToken = localStorage.getItem('jwtToken');
+            const dialogId = prompt('Enter dialog ID:');
+            const response = await fetch(`http://localhost:9902/g1/dialogs/${dialogId}/messages`, {
+                method: 'GET',
+                headers: {
+                    'Cookie': `Bearer ${jwtToken}`
+                }
+            }).then(response => response.json());
+
+            document.getElementById('output').innerText = JSON.stringify(response, null, 2);
+        }
+    </script>
+</body>
+</html>

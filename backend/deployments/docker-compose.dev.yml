@@ -1,0 +1,36 @@
+version: "3.8"
+services:
+  bdd-service:
+    image: bdd-service:latest
+    volumes:
+      - ~/bdd-logs:/logs
+    ports:
+      - "10404:10404"
+    restart: unless-stopped
+    depends_on:
+      - bdd-postgres
+  bdd-postgres:
+    image: postgres:16
+    volumes:
+      - bdd-postgres-data:/var/lib/postgresql/data
+    env_file:
+      - ~/.dev_bdd_pg_env
+    restart: unless-stopped
+    healthcheck:
+      test: pg_isready -d bdd -U bdd
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  bdd-postgres-migration:
+    build:
+      context: ..
+      dockerfile: migrate.Dockerfile
+    env_file:
+      - ~/.dev_bdd_pg_env
+    environment:
+      env: dev
+    depends_on:
+      - bdd-postgres
+
+volumes:
+  bdd-postgres-data:

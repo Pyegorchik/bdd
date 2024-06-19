@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/Pyegorchik/bdd/backend/internal/config"
@@ -52,6 +53,10 @@ func (h *handler) corsMiddleware(next http.Handler) http.Handler {
 
 func (h *handler) Init() http.Handler {
 	router := mux.NewRouter()
+
+	log.Print(http.Dir("../static/"))
+	fs := http.FileServer(http.Dir("../static/"))
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs))
 
 	authRouter := router.PathPrefix("/g1/auth").Subrouter()
 	authRouter.Handle("/refresh", h.CookieRefreshAuthMiddleware((HandlerFuncWithUser(h.RefreshAuth))))

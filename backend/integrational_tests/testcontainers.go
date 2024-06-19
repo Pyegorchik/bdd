@@ -244,15 +244,8 @@ func (p *PostgreSQLContainer) GetDSN() string {
 
 func (s *TestSuite) TearDownTest() {
 	ctx := context.Background()
-	log.Println("TearDownTest1")
 	s.service.Shutdown()
-	log.Println("TearDownTest2")
 	s.Require().NoError(s.postgreSQL.Terminate(ctx))
-
-	// Print active goroutines to debug hanging tests
-	// buf := make([]byte, 1<<20)
-	// runtime.Stack(buf, true)
-	// fmt.Printf("Goroutines after TearDownTest:\n%s\n", buf)
 }
 
 type TestSuiteUser struct {
@@ -260,7 +253,5 @@ type TestSuiteUser struct {
 }
 
 func (s *TestSuiteUser) SetupTest() {
-	log.Println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA1")
 	s.TestSuite.SetupTest()
-	log.Println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA2")
 }

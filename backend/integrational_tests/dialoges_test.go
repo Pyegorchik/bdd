@@ -38,7 +38,7 @@ func (s *TestSuiteUser) TestSendMessage() {
 	s.Require().NoError(err)
 
 	// Succeed
-	content := "Abobus"
+	content := "messageTearDownTest3"
 	msg := &models.SendMessageRequest{
 		Content:     &content,
 		RecipientID: &recepeintAddress,

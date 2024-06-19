@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/Pyegorchik/bdd/backend/internal/config"
@@ -73,14 +72,10 @@ func NewService(
 }
 
 func (s *service) Shutdown() {
-	log.Println("TearDownTest1")
 	time.Sleep(1 * time.Second)
-
-	log.Println("TearDownTest2")
 	for i := 0; i < 0; i++ {
 		s.stopCh <- struct{}{}
 	}
-	log.Println("TearDownTest3")
+
 	close(s.stopCh)
-	log.Println("TearDownTest4")
 }

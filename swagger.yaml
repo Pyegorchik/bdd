@@ -6,7 +6,7 @@ info:
 schemes:
   - http
   - https
-host: 51.250.32.229:9902
+host: localhost:9902
 # basePath: /api
 produces:
   - application/json
